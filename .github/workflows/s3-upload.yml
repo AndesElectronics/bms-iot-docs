@@ -1,0 +1,22 @@
+name: Push docs to S3
+
+on:
+  push:
+    branches:
+     - 'production'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2         
+      - name: Sync files to S3 bucket and update CloudFront
+        run: |
+          aws s3 sync ${{secrets.AWS_DOCS_FOLDER_PREFIX}} ${{secrets.AWS_S3_BMS}} --delete
+          aws cloudfront create-invalidation --distribution-id ${{secrets.AWS_CLOUDFRONT_DISTRIBUTION_S3}} --paths "/${{secrets.AWS_DOCS_FOLDER_PREFIX}}/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          AWS_DEFAULT_REGION: ${{secrets.AWS_S3_REGION}}
+          AWS_EC2_METADATA_DISABLED: true
+
